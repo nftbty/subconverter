@@ -291,6 +291,10 @@ uri = "/trojan"
 target = "/sub?target=trojan"
 
 [[aliases]]
+uri = "/mixed"
+target = "/sub?target=mixed"
+
+[[aliases]]
 uri = "/test"
 target = "/render?path=templates/test.tpl"
 

@@ -4,7 +4,9 @@
 
 #include "../config/binding.h"
 #include "../handler/webget.h"
+#ifndef NO_JS_RUNTIME
 #include "../script/cron.h"
+#endif // NO_JS_RUNTIME
 #include "../server/webserver.h"
 #include "../utils/logger.h"
 #include "../utils/network.h"
@@ -492,7 +494,7 @@ void readYAMLConf(YAML::Node &node)
             webServer.append_redirect(uri, target);
         }
     }
-
+#ifndef NO_JS_RUNTIME
     if(node["tasks"].IsSequence())
     {
         string_array vArray;
@@ -517,7 +519,7 @@ void readYAMLConf(YAML::Node &node)
         global.cronTasks = INIBinding::from<CronTaskConfig>::from_ini(vArray);
         refresh_schedule();
     }
-
+#endif // NO_JS_RUNTIME
     if(node["server"].IsDefined())
     {
         node["server"]["listen"] >> global.listenAddress;
@@ -628,12 +630,12 @@ void readTOMLConf(toml::value &root)
                   "proxy_subscription", global.proxySubscription,
                   "append_proxy_type", global.appendType
     );
-
+#ifndef NO_JS_RUNTIME
     if(filter)
         find_if_exist(section_common, "filter_script", global.filterScript);
     else
         global.filterScript.clear();
-
+#endif // NO_JS_RUNTIME
     safe_set_streams(toml::find_or<RegexMatchConfigs>(root, "userinfo", "stream_rule", RegexMatchConfigs{}));
     safe_set_times(toml::find_or<RegexMatchConfigs>(root, "userinfo", "time_rule", RegexMatchConfigs{}));
 
@@ -714,11 +716,11 @@ void readTOMLConf(toml::value &root)
     {
         webServer.append_redirect(key.as_string(), value.as_string());
     });
-
+#ifndef NO_JS_RUNTIME
     auto tasks = toml::find_or<std::vector<toml::value>>(root, "tasks", {});
     importItems(tasks, "tasks", false);
     global.cronTasks = toml::get<CronTaskConfigs>(toml::value(tasks));
-
+#endif // NO_JS_RUNTIME
     const auto &section_server = toml::find(root, "server");
 
     find_if_exist(section_server,
@@ -1003,7 +1005,7 @@ void readConf()
         for(auto &x : tempmap)
             webServer.append_redirect(x.first, x.second);
     }
-
+#ifndef NO_JS_RUNTIME
     if(ini.SectionExist("tasks"))
     {
         string_array vArray;
@@ -1014,7 +1016,7 @@ void readConf()
         global.cronTasks = INIBinding::from<CronTaskConfig>::from_ini(vArray);
         refresh_schedule();
     }
-
+#endif // NO_JS_RUNTIME
     ini.EnterSection("server");
     ini.GetIfExist("listen", global.listenAddress);
     ini.GetIntIfExist("port", global.listenPort);

@@ -10,7 +10,9 @@
 #include "handler/interfaces.h"
 #include "handler/webget.h"
 #include "handler/settings.h"
+#ifndef NO_JS_RUNTIME
 #include "script/cron.h"
+#endif // NO_JS_RUNTIME
 #include "server/socket.h"
 #include "server/webserver.h"
 #include "utils/defer.h"
@@ -107,11 +109,13 @@ void signal_handler(int sig)
     }
 }
 
+#ifndef NO_JS_RUNTIME
 void cron_tick_caller()
 {
     if(global.enableCron)
         cron_tick();
 }
+#endif // NO_JS_RUNTIME
 
 int main(int argc, char *argv[])
 {
@@ -297,7 +301,11 @@ int main(int argc, char *argv[])
     std::string env_port = getEnv("PORT");
     if(env_port.size())
         global.listenPort = to_int(env_port, global.listenPort);
+#ifndef NO_JS_RUNTIME
     listener_args args = {global.listenAddress, global.listenPort, global.maxPendingConns, global.maxConcurThreads, cron_tick_caller, 200};
+#else
+    listener_args args = {global.listenAddress, global.listenPort, global.maxPendingConns, global.maxConcurThreads, nullptr, 200};
+#endif // NO_JS_RUNTIME
     //std::cout<<"Serving HTTP @ http://"<<listen_address<<":"<<listen_port<<std::endl;
     writeLog(0, "Startup completed. Serving HTTP @ http://" + global.listenAddress + ":" + std::to_string(global.listenPort), LOG_LEVEL_INFO);
     webServer.start_web_server_multi(&args);

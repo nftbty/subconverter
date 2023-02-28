@@ -64,10 +64,11 @@ struct Settings
     //limits
     size_t maxAllowedRulesets = 64, maxAllowedRules = 32768;
     bool scriptCleanContext = false;
-
+#ifndef NO_JS_RUNTIME
     //cron system
     bool enableCron = false;
     CronTaskConfigs cronTasks;
+#endif // NO_JS_RUNTIME
 };
 
 

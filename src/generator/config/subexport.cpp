@@ -9,7 +9,9 @@
 #include "../../generator/template/templates.h"
 #include "../../handler/settings.h"
 #include "../../parser/config/proxy.h"
+#ifndef NO_JS_RUNTIME
 #include "../../script/script_quickjs.h"
+#endif // NO_JS_RUNTIME
 #include "../../utils/bitwise.h"
 #include "../../utils/file_extra.h"
 #include "../../utils/ini_reader/ini_reader.h"
