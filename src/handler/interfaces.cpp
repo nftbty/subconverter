@@ -11,8 +11,10 @@
 #include "../generator/config/ruleconvert.h"
 #include "../generator/config/subexport.h"
 #include "../generator/template/templates.h"
+#ifndef NO_JS_RUNTIME
 #include "../script/cron.h"
 #include "../script/script_quickjs.h"
+#endif // NO_JS_RUNTIME
 #include "../server/webserver.h"
 #include "../utils/base64/base64.h"
 #include "../utils/file_extra.h"
@@ -415,9 +417,11 @@ std::string subconverter(RESPONSE_CALLBACK_ARGS)
     ext.tls13.define(argTLS13).define(global.TLS13Flag);
 
     ext.sort_flag = argSort.get(global.enableSort);
+#ifndef NO_JS_RUNTIME
     argUseSortScript.define(global.sortScript.size() != 0);
     if(ext.sort_flag && argUseSortScript)
         ext.sort_script = global.sortScript;
+#endif // NO_JS_RUNTIME
     ext.filter_deprecated = argFilterDeprecated.get(global.filterDeprecated);
     ext.clash_new_field_name = argClashNewField.get(global.clashUseNewField);
     ext.clash_script = argGenClashScript.get();
@@ -529,7 +533,7 @@ std::string subconverter(RESPONSE_CALLBACK_ARGS)
         lIncludeRemarks = string_array{argIncludeRemark};
     if(argExcludeRemark.size() && regValid(argExcludeRemark))
         lExcludeRemarks = string_array{argExcludeRemark};
-
+#ifndef NO_JS_RUNTIME
     /// initialize script runtime
     if(authorized && !global.scriptCleanContext)
     {
@@ -538,7 +542,7 @@ std::string subconverter(RESPONSE_CALLBACK_ARGS)
         ext.js_context = new qjs::Context(*ext.js_runtime);
         script_context_init(*ext.js_context);
     }
-
+#endif // NO_JS_RUNTIME
     //start parsing urls
     RegexMatchConfigs stream_temp = safe_get_streams(), time_temp = safe_get_times();
 
@@ -556,9 +560,10 @@ std::string subconverter(RESPONSE_CALLBACK_ARGS)
     parse_set.sub_info = &subInfo;
     parse_set.authorized = authorized;
     parse_set.request_header = &request.headers;
+#ifndef NO_JS_RUNTIME
     parse_set.js_runtime = ext.js_runtime;
     parse_set.js_context = ext.js_context;
-
+#endif // NO_JS_RUNTIME
     if(global.insertUrls.size() && argEnableInsert)
     {
         groupID = -1;
@@ -623,6 +628,7 @@ std::string subconverter(RESPONSE_CALLBACK_ARGS)
     {
         std::move(insert_nodes.begin(), insert_nodes.end(), std::back_inserter(nodes));
     }
+#ifndef NO_JS_RUNTIME
     //run filter script
     std::string filterScript = global.filterScript;
     if(authorized && !argFilterScript.empty())
@@ -668,7 +674,7 @@ std::string subconverter(RESPONSE_CALLBACK_ARGS)
             }
         }, global.scriptCleanContext);
     }
-
+#endif // NO_JS_RUNTIME
     //check custom group name
     if(argGroupName.size())
         for(Proxy &x : nodes)

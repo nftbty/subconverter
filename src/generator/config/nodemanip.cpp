@@ -8,7 +8,9 @@
 #include "../../parser/config/proxy.h"
 #include "../../parser/infoparser.h"
 #include "../../parser/subparser.h"
+#ifndef NO_JS_RUNTIME
 #include "../../script/script_quickjs.h"
+#endif // NO_JS_RUNTIME
 #include "../../utils/file_extra.h"
 #include "../../utils/logger.h"
 #include "../../utils/map_extra.h"
@@ -49,7 +51,7 @@ int addNodes(std::string link, std::vector<Proxy> &allNodes, int groupID, parse_
 
     // TODO: replace with startsWith if appropriate
     link = replaceAllDistinct(link, "\"", "");
-
+#ifndef NO_JS_RUNTIME
     /// script:filepath,arg1,arg2,...
     if(authorized) script_safe_runner(parse_set.js_runtime, parse_set.js_context, [&](qjs::Context &ctx)
     {
@@ -104,7 +106,7 @@ int addNodes(std::string link, std::vector<Proxy> &allNodes, int groupID, parse_
                 duk_pop(ctx); /// pop err
             }
             */
-
+#endif // NO_JS_RUNTIME
     /// tag:group_name,link
     if(startsWith(link, "tag:"))
     {
@@ -380,6 +382,7 @@ void nodeRename(Proxy &node, const RegexMatchConfigs &rename_array, extra_settin
 
     for(const RegexMatchConfig &x : rename_array)
     {
+#ifndef NO_JS_RUNTIME
         if(!x.Script.empty() && ext.authorized)
         {
             script_safe_runner(ext.js_runtime, ext.js_context, [&](qjs::Context &ctx)
@@ -402,6 +405,7 @@ void nodeRename(Proxy &node, const RegexMatchConfigs &rename_array, extra_settin
             }, global.scriptCleanContext);
             continue;
         }
+#endif // NO_JS_RUNTIME
         if(applyMatcher(x.Match, real_rule, node) && real_rule.size())
             remark = regReplace(remark, real_rule, x.Replace);
     }
@@ -432,6 +436,7 @@ std::string addEmoji(const Proxy &node, const RegexMatchConfigs &emoji_array, ex
 
     for(const RegexMatchConfig &x : emoji_array)
     {
+#ifndef NO_JS_RUNTIME
         if(!x.Script.empty() && ext.authorized)
         {
             std::string result;
@@ -457,6 +462,7 @@ std::string addEmoji(const Proxy &node, const RegexMatchConfigs &emoji_array, ex
                 return result;
             continue;
         }
+#endif // NO_JS_RUNTIME
         if(x.Replace.empty())
             continue;
         if(applyMatcher(x.Match, real_rule, node) && real_rule.size() && regFind(node.Remark, real_rule))
@@ -480,6 +486,7 @@ void preprocessNodes(std::vector<Proxy> &nodes, extra_settings &ext)
 
     if(ext.sort_flag)
     {
+#ifndef NO_JS_RUNTIME
         bool failed = true;
         if(ext.sort_script.size() && ext.authorized)
         {
@@ -509,7 +516,9 @@ void preprocessNodes(std::vector<Proxy> &nodes, extra_settings &ext)
                 }
             }, global.scriptCleanContext);
         }
-        if(failed) std::stable_sort(nodes.begin(), nodes.end(), [](const Proxy &a, const Proxy &b)
+        if(failed)
+#endif // NO_JS_RUNTIME
+        std::stable_sort(nodes.begin(), nodes.end(), [](const Proxy &a, const Proxy &b)
         {
             return a.Remark < b.Remark;
         });

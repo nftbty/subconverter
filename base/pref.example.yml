@@ -122,6 +122,7 @@ aliases:
   - {uri: /ssr, target: "/sub?target=ssr"}
   - {uri: /v2ray, target: "/sub?target=v2ray"}
   - {uri: /trojan, target: "/sub?target=trojan"}
+  - {uri: /mixed, target: "/sub?target=mixed"}
 
 tasks:
 #  - name: tick

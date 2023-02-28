@@ -20,6 +20,7 @@ ENDIF()
 OPTION(USING_MALLOC_TRIM "Call malloc_trim after processing request to lower memory usage (Your system must support malloc_trim)." OFF)
 #now using internal MD5 calculation
 #OPTION(USING_MBEDTLS "Use mbedTLS instead of OpenSSL for MD5 calculation." OFF)
+OPTION(NO_JS_RUNTIME "Build with no javascript support." OFF)
 OPTION(BUILD_STATIC_LIBRARY "Build a static library containing only the essential part." OFF)
 
 INCLUDE(CheckCXXSourceCompiles)
@@ -31,32 +32,36 @@ int main(){std::to_string(0);}
 
 IF(NOT BUILD_STATIC_LIBRARY)
 
+IF(NO_JS_RUNTIME)
+    SET(SRC_SCRIPT)
+ELSE()
+    SET(SRC_SCRIPT src/script/cron.cpp src/script/script_quickjs.cpp)
+ENDIF()
 ADD_EXECUTABLE(${BUILD_TARGET_NAME} 
+    src/main.cpp
     src/generator/config/nodemanip.cpp
     src/generator/config/ruleconvert.cpp
     src/generator/config/subexport.cpp
     src/generator/template/templates.cpp
     src/handler/interfaces.cpp
     src/handler/multithread.cpp
+    src/handler/settings.cpp
     src/handler/upload.cpp
     src/handler/webget.cpp
-    src/handler/settings.cpp
-    src/main.cpp
     src/parser/infoparser.cpp
     src/parser/subparser.cpp
-    src/script/cron.cpp
-    src/script/script_quickjs.cpp
     src/server/webserver_libevent.cpp
-    src/utils/base64/base64.cpp
     src/utils/codepage.cpp
     src/utils/file.cpp
     src/utils/logger.cpp
-    src/utils/md5/md5.cpp
     src/utils/network.cpp
     src/utils/regexp.cpp
     src/utils/string.cpp
     src/utils/system.cpp
-    src/utils/urlencode.cpp)
+    src/utils/urlencode.cpp
+    src/utils/base64/base64.cpp
+    src/utils/md5/md5.cpp
+    ${SRC_SCRIPT})
 TARGET_INCLUDE_DIRECTORIES(${BUILD_TARGET_NAME} PRIVATE src)
 TARGET_LINK_DIRECTORIES(${BUILD_TARGET_NAME} PRIVATE ${CMAKE_SOURCE_DIR})
 
@@ -97,13 +102,17 @@ TARGET_INCLUDE_DIRECTORIES(${BUILD_TARGET_NAME} PRIVATE ${PCRE2_INCLUDE_DIRS})
 TARGET_LINK_LIBRARIES(${BUILD_TARGET_NAME} ${PCRE2_LIBRARY})
 TARGET_COMPILE_DEFINITIONS(${BUILD_TARGET_NAME} PRIVATE -DPCRE2_STATIC)
 
-FIND_PACKAGE(QuickJS REQUIRED)
-TARGET_INCLUDE_DIRECTORIES(${BUILD_TARGET_NAME} PRIVATE ${QUICKJS_INCLUDE_DIRS})
-TARGET_LINK_LIBRARIES(${BUILD_TARGET_NAME} ${QUICKJS_LIBRARIES})
+IF(NO_JS_RUNTIME)
+    TARGET_COMPILE_DEFINITIONS(${BUILD_TARGET_NAME} PRIVATE -DNO_JS_RUNTIME)
+ELSE()
+    FIND_PACKAGE(QuickJS REQUIRED)
+    TARGET_INCLUDE_DIRECTORIES(${BUILD_TARGET_NAME} PRIVATE ${QUICKJS_INCLUDE_DIRS})
+    TARGET_LINK_LIBRARIES(${BUILD_TARGET_NAME} ${QUICKJS_LIBRARIES})
 
-FIND_PACKAGE(LibCron REQUIRED)
-TARGET_INCLUDE_DIRECTORIES(${BUILD_TARGET_NAME} PRIVATE ${LIBCRON_INCLUDE_DIRS})
-TARGET_LINK_LIBRARIES(${BUILD_TARGET_NAME} ${LIBCRON_LIBRARIES})
+    FIND_PACKAGE(LibCron REQUIRED)
+    TARGET_INCLUDE_DIRECTORIES(${BUILD_TARGET_NAME} PRIVATE ${LIBCRON_INCLUDE_DIRS})
+    TARGET_LINK_LIBRARIES(${BUILD_TARGET_NAME} ${LIBCRON_LIBRARIES})
+ENDIF()
 
 IF(WIN32)
     TARGET_LINK_LIBRARIES(${BUILD_TARGET_NAME} wsock32 ws2_32)
