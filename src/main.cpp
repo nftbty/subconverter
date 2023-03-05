@@ -123,18 +123,23 @@ int main(int argc, char *argv[])
     std::string prgpath = argv[0];
     setcd(prgpath); //first switch to program directory
 #endif // _DEBUG
+#ifndef NO_TOML_CONFIG
     if(fileExist("pref.toml"))
         global.prefPath = "pref.toml";
-    else if(fileExist("pref.yml"))
+    else
+#endif // NO_TOML_CONFIG
+    if(fileExist("pref.yml"))
         global.prefPath = "pref.yml";
     else if(!fileExist("pref.ini"))
     {
+#ifndef NO_TOML_CONFIG
         if(fileExist("pref.example.toml"))
         {
             fileCopy("pref.example.toml", "pref.toml");
             global.prefPath = "pref.toml";
-        }
-        else if(fileExist("pref.example.yml"))
+        } else
+#endif // NO_TOML_CONFIG
+        if(fileExist("pref.example.yml"))
         {
             fileCopy("pref.example.yml", "pref.yml");
             global.prefPath = "pref.yml";

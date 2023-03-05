@@ -1,14 +1,15 @@
 #ifndef BINDING_H_INCLUDED
 #define BINDING_H_INCLUDED
-
+#ifndef NO_TOML_CONFIG
 #include <toml.hpp>
-
+#endif // NO_TOML_CONFIG
 #include "../handler/settings.h"
 #include "crontask.h"
 #include "proxygroup.h"
 #include "regmatch.h"
 #include "ruleset.h"
 
+#ifndef NO_TOML_CONFIG
 namespace toml
 {
     template<>
@@ -175,6 +176,7 @@ namespace toml
         }
     };
 }
+#endif // NO_TOML_CONFIG
 
 namespace INIBinding
 {
