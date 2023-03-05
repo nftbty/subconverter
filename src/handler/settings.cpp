@@ -1,7 +1,8 @@
 #include <string>
 #include <mutex>
+#ifndef NO_TOML_CONFIG
 #include <toml.hpp>
-
+#endif // NO_TOML_CONFIG
 #include "../config/binding.h"
 #include "../handler/webget.h"
 #ifndef NO_JS_RUNTIME
@@ -71,6 +72,7 @@ int importItems(string_array &target, bool scope_limit)
     return 0;
 }
 
+#ifndef NO_TOML_CONFIG
 toml::value parseToml(const std::string &content, const std::string &fname)
 {
     std::istringstream is(content);
@@ -113,6 +115,7 @@ void importItems(std::vector<toml::value> &root, const std::string &import_key, 
     root.swap(newRoot);
     writeLog(0, "Imported " + std::to_string(count) + " item(s).");
 }
+#endif // NO_TOML_CONFIG
 
 void readRegexMatch(YAML::Node node, const std::string &delimiter, string_array &dest, bool scope_limit = true)
 {
@@ -564,6 +567,7 @@ void readYAMLConf(YAML::Node &node)
     writeLog(0, "Load preference settings in YAML format completed.", LOG_LEVEL_INFO);
 }
 
+#ifndef NO_TOML_CONFIG
 template <class T, class... U>
 void find_if_exist(const toml::value &v, const toml::key &k, T& target, U&&... args)
 {
@@ -775,6 +779,7 @@ void readTOMLConf(toml::value &root)
 
     writeLog(0, "Load preference settings in TOML format completed.", LOG_LEVEL_INFO);
 }
+#endif // NO_TOML_CONFIG
 
 void readConf()
 {
@@ -795,9 +800,11 @@ void readConf()
             if(yaml.size() && yaml["common"])
                 return readYAMLConf(yaml);
         }
+#ifndef NO_TOML_CONFIG
         toml::value conf = parseToml(prefdata, global.prefPath);
         if(!conf.is_uninitialized() && toml::find_or<int>(conf, "version", 0))
             return readTOMLConf(conf);
+#endif // NO_TOML_CONFIG
     }
     catch (YAML::Exception &e)
     {
@@ -805,12 +812,14 @@ void readConf()
         writeLog(0, e.what(), LOG_LEVEL_DEBUG);
         writeLog(0, "Unable to load preference settings as YAML.", LOG_LEVEL_DEBUG);
     }
+#ifndef NO_TOML_CONFIG
     catch (toml::exception &e)
     {
         //ignore toml parse error
         writeLog(0, e.what(), LOG_LEVEL_DEBUG);
         writeLog(0, "Unable to load preference settings as TOML.", LOG_LEVEL_DEBUG);
     }
+#endif // NO_TOML_CONFIG
 
     INIReader ini;
     ini.allow_dup_section_titles = true;
@@ -1135,6 +1144,7 @@ int loadExternalYAML(YAML::Node &node, ExternalConfig &ext)
     return 0;
 }
 
+#ifndef NO_TOML_CONFIG
 int loadExternalTOML(toml::value &root, ExternalConfig &ext)
 {
     const auto &section = toml::find(root, "custom");
@@ -1185,6 +1195,7 @@ int loadExternalTOML(toml::value &root, ExternalConfig &ext)
 
     return 0;
 }
+#endif // NO_TOML_CONFIG
 
 int loadExternalConfig(std::string &path, ExternalConfig &ext)
 {
@@ -1197,18 +1208,22 @@ int loadExternalConfig(std::string &path, ExternalConfig &ext)
         YAML::Node yaml = YAML::Load(base_content);
         if(yaml.size() && yaml["custom"].IsDefined())
             return loadExternalYAML(yaml, ext);
+#ifndef NO_TOML_CONFIG
         toml::value conf = parseToml(base_content, path);
         if(!conf.is_uninitialized() && toml::find_or<int>(conf, "version", 0))
             return loadExternalTOML(conf, ext);
+#endif // NO_TOML_CONFIG
     }
     catch (YAML::Exception &e)
     {
         //ignore
     }
+#ifndef NO_TOML_CONFIG
     catch (toml::exception &e)
     {
         //ignore
     }
+#endif // NO_TOML_CONFIG
 
     INIReader ini;
     ini.store_isolated_line = true;
